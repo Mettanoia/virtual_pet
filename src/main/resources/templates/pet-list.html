@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Your Pets</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body>
+<h1>Your Pets</h1>
+<div class="pet-list">
+    <ul>
+        <li th:each="pet : ${pets}">
+            <a th:href="@{/pet/{id}(id=${pet.id})}">
+                <img th:src="@{/images/{petType}.png(petType=${pet.petType})}" alt="Pet Image" />
+                <p>Name: <span th:text="${pet.name}"></span></p>
+                <p>Energy: <span th:text="${pet.energy}"></span></p>
+                <p>Mood: <span th:text="${pet.mood}"></span></p>
+            </a>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

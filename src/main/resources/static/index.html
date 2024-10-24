@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Virtual Pet Management</title>
+    <style>
+        /* CSS Styles */
+
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('background.jpg'); /* Use your provided background image */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        h1, h2, h3 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        #pets-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .pet {
+            border: 1px solid #ccc;
+            margin: 10px;
+            padding: 10px;
+            width: 200px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .pet img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .actions button {
+            margin-top: 5px;
+            width: 100%;
+            padding: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .actions button.delete {
+            background-color: #f44336;
+        }
+
+        .actions button:hover {
+            opacity: 0.9;
+        }
+
+        #create-pet-form {
+            margin-top: 20px;
+        }
+
+        #create-pet-form input {
+            padding: 8px;
+            width: calc(100% - 16px);
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        #create-pet-form button {
+            padding: 10px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #create-pet-form button:hover {
+            opacity: 0.9;
+        }
+
+        #message {
+            color: red;
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .pet {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Welcome, <span id="username-display">User</span>!</h1>
+
+    <h2>Your Pets</h2>
+    <div id="pets-container"></div>
+
+    <h2>Create a New Pet</h2>
+    <form id="create-pet-form">
+        <input type="text" id="pet-name" name="name" placeholder="Enter pet name" required>
+        <button type="submit">Create Pet</button>
+    </form>
+
+    <p id="message"></p>
+</div>
+
+<!-- Include jQuery from a CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    // JavaScript Code
+
+    $(document).ready(function () {
+        // Arrays for randomization
+        const moods = ['HAPPY', 'CALM', 'ANGRY', 'SAD', 'NEUTRAL', 'OKAY'];
+        const petTypes = ['FIRE', 'WATER', 'EARTH'];
+        const energyLevels = ['LOWEST', 'LOW', 'MEDIUM', 'HIGH', 'HIGHEST'];
+
+        // Function to get a random element from an array
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        let currentUser = '';
+
+        // Function to get the username from URL parameters
+        function getUsernameFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('username');
+        }
+
+        // Initialize the application
+        function init() {
+            currentUser = getUsernameFromUrl();
+            if (currentUser && currentUser.trim() !== '') {
+                currentUser = currentUser.trim();
+                $('#username-display').text(currentUser);
+                loadPets();
+            } else {
+                // If username is not present, redirect to login page
+                window.location.href = '/login';
+            }
+        }
+
+        // Function to load the user's pets
+        function loadPets() {
+            $.ajax({
+                url: `/api/pets/${currentUser}`, // Use the username in the URL
+                method: 'GET',
+                dataType: 'json',
+                success: function (pets) {
+                    displayPets(pets);
+                },
+                error: function (xhr) {
+                    if (xhr.status === 401 || xhr.status === 403) {
+                        // Session expired or not authorized
+                        window.location.href = '/login';
+                    } else {
+                        $('#message').text('Error loading pets.');
+                    }
+                }
+            });
+        }
+
+        // Function to display the list of pets
+        function displayPets(pets) {
+            const container = $('#pets-container');
+            container.empty();
+
+            if (pets.length === 0) {
+                container.append('<p>You have no pets yet.</p>');
+                return;
+            }
+
+            pets.forEach(function (pet) {
+                const petDiv = $(`
+                    <div class="pet">
+                        <h3>${pet.name}</h3>
+                        <img src="${getPetImageUrl(pet.petType)}" alt="${pet.petType}">
+                        <p>Type: ${pet.petType}</p>
+                        <p>Energy: ${pet.energy}</p>
+                        <p>Mood: ${pet.mood}</p>
+                        <p>Level: ${pet.petLevel}</p>
+                        <div class="actions">
+                            <button class="feed-pet" data-pet-id="${pet.id}">Feed</button>
+                            <button class="gift-pet" data-pet-id="${pet.id}">Give Gift</button>
+                            <button class="delete-pet delete" data-pet-id="${pet.id}">Delete</button>
+                        </div>
+                    </div>
+                `);
+                container.append(petDiv);
+            });
+        }
+
+        // Function to get the image URL for a pet type
+        function getPetImageUrl(petType) {
+            // Assuming images are stored in /images/ folder and named after petType in lowercase
+            return `/images/${petType.toLowerCase()}.jpg`;
+        }
+
+        // Event handler for creating a new pet
+        $('#create-pet-form').submit(function (event) {
+            event.preventDefault();
+            const petName = $('#pet-name').val().trim();
+
+            if (petName === '') {
+                $('#message').text('Please enter a pet name.');
+                return;
+            }
+
+            const petData = {
+                id: null,
+                masterId: null, // The backend will set this
+                name: petName,
+                petType: getRandomElement(petTypes),
+                energy: getRandomElement(energyLevels),
+                mood: getRandomElement(moods),
+                petLevel: 'BASIC', // Default level
+                lastFeedTime: Date.now()
+            };
+
+            $.ajax({
+                url: `/api/pets/${currentUser}`, // Create pet endpoint
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(petData),
+                success: function () {
+                    $('#message').text('Pet created successfully!');
+                    $('#pet-name').val('');
+                    loadPets();
+                },
+                error: function (xhr) {
+                    if (xhr.status === 401 || xhr.status === 403) {
+                        // Session expired or not authorized
+                        window.location.href = '/login';
+                    } else {
+                        $('#message').text('Error creating pet.');
+                    }
+                }
+            });
+        });
+
+        // Event handler for feeding a pet
+        $('#pets-container').on('click', '.feed-pet', function () {
+            const petId = $(this).data('pet-id');
+            const foodData = {food: 'EGGS'}; // Fixed food type or prompt the user
+
+            $.ajax({
+                url: `/api/pets/${currentUser}/${petId}/feed`, // Use the username in the URL
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(foodData),
+                success: function () {
+                    $('#message').text('Pet fed successfully!');
+                    loadPets();
+                },
+                error: function (xhr) {
+                    if (xhr.status === 401 || xhr.status === 403) {
+                        window.location.href = '/login';
+                    } else {
+                        $('#message').text('Error feeding pet.');
+                    }
+                }
+            });
+        });
+
+        // Event handler for giving a gift to a pet
+        $('#pets-container').on('click', '.gift-pet', function () {
+            const petId = $(this).data('pet-id');
+            const giftData = {gift: 'BONE'}; // Fixed gift type or prompt the user
+
+            $.ajax({
+                url: `/api/pets/${currentUser}/${petId}/gift`, // Use the username in the URL
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(giftData),
+                success: function () {
+                    $('#message').text('Gift given successfully!');
+                    loadPets();
+                },
+                error: function (xhr) {
+                    if (xhr.status === 401 || xhr.status === 403) {
+                        window.location.href = '/login';
+                    } else {
+                        $('#message').text('Error giving gift.');
+                    }
+                }
+            });
+        });
+
+        // Event handler for deleting a pet
+        $('#pets-container').on('click', '.delete-pet', function () {
+            const petId = $(this).data('pet-id');
+
+            if (confirm('Are you sure you want to delete this pet?')) {
+                $.ajax({
+                    url: `/api/pets/${currentUser}/${petId}`, // Use the username in the URL
+                    method: 'DELETE',
+                    success: function () {
+                        $('#message').text('Pet deleted successfully!');
+                        loadPets();
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 401 || xhr.status === 403) {
+                            window.location.href = '/login';
+                        } else {
+                            $('#message').text('Error deleting pet.');
+                        }
+                    }
+                });
+            }
+        });
+
+        // Initialize the application
+        init();
+    });
+</script>
+
+</body>
+</html>

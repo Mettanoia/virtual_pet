@@ -1,0 +1,33 @@
+.environment {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background-size: cover;
+    margin: 0 auto;
+}
+
+.environment.DESERT {
+    background-image: url('/images/desert-background.png');
+}
+
+.environment.FOREST {
+    background-image: url('/images/forest-background.png');
+}
+
+.environment.OASIS {
+    background-image: url('/images/oasis-background.png');
+}
+
+.pet {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation: move 5s infinite alternate;
+}
+
+@keyframes move {
+    0% { left: 0; bottom: 0; }
+    100% { left: calc(100% - 100px); bottom: calc(100% - 100px); }
+}

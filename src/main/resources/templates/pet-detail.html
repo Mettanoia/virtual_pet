@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Pet Detail</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <script th:src="@{/js/pet-animation.js}"></script>
+</head>
+<body>
+<div class="environment" th:class="'environment ' + ${pet.environment}">
+    <div id="pet" class="pet" th:style="background-image: url('/images/' + ${pet.petType} + '.png');"></div>
+</div>
+<button id="interact-button">Interact</button>
+
+<!-- Interaction Menu -->
+<div id="interaction-menu" style="display: none;">
+    <h2>Choose an action:</h2>
+    <button id="feed-button">Feed</button>
+    <button id="gift-button">Give Gift</button>
+</div>
+
+<!-- Food/Gift Selection -->
+<div id="selection-menu" style="display: none;">
+    <h2 id="selection-title"></h2>
+    <ul id="selection-list">
+        <!-- Items will be populated dynamically -->
+    </ul>
+</div>
+</body>
+</html>
